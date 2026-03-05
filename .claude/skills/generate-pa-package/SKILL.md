@@ -278,7 +278,7 @@ Every connector action in Power Automate uses this structure:
 
 6. **Generate the package** by running:
    ```
-   node scripts/power-automate/generate-pa-package.js scripts/power-automate/flows/<flow-name>.json "output/<OutputName>"
+   node scripts/power-automate/generate-pa-package.js scripts/power-automate/flows/<flow-name>.json
    ```
 
 7. **Report the result** to the user:

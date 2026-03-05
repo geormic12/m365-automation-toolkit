@@ -8,7 +8,7 @@
  * Reverse-engineered from real Copilot Studio exports (Feb 2026).
  *
  * Usage:
- *   node generate-copilot-agent.js <agent-definition.json> [output-path]
+ *   node generate-copilot-agent.js <agent-definition.json> [output-directory]
  *
  * The agent-definition.json schema:
  * {
@@ -1164,29 +1164,28 @@ function buildTopicYaml(topic, botSchemaName) {
 // ---------------------------------------------------------------------------
 // Write solution to disk and create .zip
 // ---------------------------------------------------------------------------
-async function createSolutionZip(agentDef, outputName) {
+async function createSolutionZip(agentDef, outputDirArg) {
   const result = buildAgent(agentDef);
-  const baseOutputDir = path.resolve(
-    outputName || result.solutionUniqueName.replace(/[^a-zA-Z0-9]/g, '_')
-  );
+  const outputDir = path.resolve(outputDirArg || path.join('output', 'copilot-agents'));
+  const solutionBase = result.solutionUniqueName;
+
+  // Ensure output directory exists
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
 
   // Auto-increment version based on existing zips in the output directory
-  const outputParent = path.dirname(baseOutputDir);
-  const solutionBase = result.solutionUniqueName;
   let version = agentDef.solution?.version || '1.0.0.0';
-
-  if (fs.existsSync(outputParent)) {
-    const existingZips = fs.readdirSync(outputParent)
-      .filter(f => f.startsWith(solutionBase + '_') && f.endsWith('.zip'))
-      .sort();
-    if (existingZips.length > 0) {
-      const lastZip = existingZips[existingZips.length - 1];
-      const versionMatch = lastZip.replace(solutionBase + '_', '').replace('.zip', '');
-      const parts = versionMatch.split('_').map(Number);
-      if (parts.length === 4 && parts.every(n => !isNaN(n))) {
-        parts[3] += 1;
-        version = parts.join('.');
-      }
+  const existingZips = fs.readdirSync(outputDir)
+    .filter(f => f.startsWith(solutionBase + '_') && f.endsWith('.zip'))
+    .sort();
+  if (existingZips.length > 0) {
+    const lastZip = existingZips[existingZips.length - 1];
+    const versionMatch = lastZip.replace(solutionBase + '_', '').replace('.zip', '');
+    const parts = versionMatch.split('_').map(Number);
+    if (parts.length === 4 && parts.every(n => !isNaN(n))) {
+      parts[3] += 1;
+      version = parts.join('.');
     }
   }
 
@@ -1196,11 +1195,15 @@ async function createSolutionZip(agentDef, outputName) {
 
   // Re-build with updated version
   const versionedResult = buildAgent(agentDef);
-  const outputDir = baseOutputDir + '_temp';
+  const tempDir = path.join(outputDir, '_temp_solution');
+
+  if (fs.existsSync(tempDir)) {
+    fs.rmSync(tempDir, { recursive: true });
+  }
 
   // Create directory structure and write files
   versionedResult.files.forEach(file => {
-    const filePath = path.join(outputDir, file.path);
+    const filePath = path.join(tempDir, file.path);
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
     fs.writeFileSync(filePath, file.content, 'utf8');
     console.log(`  wrote: ${file.path}`);
@@ -1210,17 +1213,17 @@ async function createSolutionZip(agentDef, outputName) {
   // PowerShell's Compress-Archive uses backslashes on Windows, which breaks
   // Dataverse solution imports. Use System.IO.Compression directly instead.
   const zipName = `${solutionBase}_${version.replace(/\./g, '_')}.zip`;
-  const zipPath = path.join(outputParent, zipName);
+  const zipPath = path.join(outputDir, zipName);
   const { execSync } = require('child_process');
-  const outputDirWin = outputDir.replace(/\//g, '\\');
+  const tempDirWin = tempDir.replace(/\//g, '\\');
   const zipPathWin = zipPath.replace(/\//g, '\\');
 
-  const psScript = outputDir + '_create_zip.ps1';
+  const psScript = path.join(outputDir, '_create_zip.ps1');
   fs.writeFileSync(psScript, `
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $zipPath = '${zipPathWin}'
-$sourceDir = '${outputDirWin}'
+$sourceDir = '${tempDirWin}'
 if (Test-Path $zipPath) { Remove-Item $zipPath }
 $zip = [System.IO.Compression.ZipFile]::Open($zipPath, 'Create')
 Get-ChildItem -Path $sourceDir -Recurse -File | ForEach-Object {
@@ -1238,9 +1241,9 @@ $zip.Dispose()
     console.log(`\nSolution package created: ${zipPath}`);
   } catch (err) {
     fs.unlinkSync(psScript);
-    console.log(`\nFolder structure created at: ${outputDir}`);
+    console.log(`\nFolder structure created at: ${tempDir}`);
     console.log('To create the importable ZIP, run:');
-    console.log(`  pac solution pack --folder "${outputDir}" --zipfile "${zipPath}"`);
+    console.log(`  pac solution pack --folder "${tempDir}" --zipfile "${zipPath}"`);
   }
 
   console.log(`\nBot schema name: ${versionedResult.botSchemaName}`);
@@ -1257,8 +1260,8 @@ $zip.Dispose()
   console.log('  4. Publish when ready');
 
   // Clean up temp directory
-  fs.rmSync(outputDir, { recursive: true, force: true });
-  console.log(`\nCleaned up temp folder: ${outputDir}`);
+  fs.rmSync(tempDir, { recursive: true, force: true });
+  console.log(`\nCleaned up temp folder: ${tempDir}`);
 
   return zipPath;
 }
@@ -1269,15 +1272,17 @@ $zip.Dispose()
 if (require.main === module) {
   const args = process.argv.slice(2);
   if (args.length < 1) {
-    console.error('Usage: node generate-copilot-agent.js <agent-definition.json> [output-path]');
+    console.error('Usage: node generate-copilot-agent.js <agent-definition.json> [output-directory]');
+    console.error('');
+    console.error('  output-directory  Where to write the .zip (default: output/copilot-agents/)');
     console.error('');
     console.error('Example:');
-    console.error('  node generate-copilot-agent.js scheduling-agent.json "output/SchedulingAgent-CopilotStudio"');
+    console.error('  node generate-copilot-agent.js agents/scheduling-agent/scheduling-agent.json');
     process.exit(1);
   }
 
   const defPath = path.resolve(args[0]);
-  const outputName = args[1] || undefined;
+  const outputDirArg = args[1] || undefined;
 
   if (!fs.existsSync(defPath)) {
     console.error(`File not found: ${defPath}`);
@@ -1288,7 +1293,7 @@ if (require.main === module) {
   agentDef._defPath = defPath;  // used to resolve relative instructionsFile paths
   console.log(`Generating Copilot Studio solution for: ${agentDef.name}`);
 
-  createSolutionZip(agentDef, outputName).catch(err => {
+  createSolutionZip(agentDef, outputDirArg).catch(err => {
     console.error('Error:', err);
     process.exit(1);
   });

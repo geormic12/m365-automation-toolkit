@@ -290,7 +290,7 @@ Every connector action uses this structure:
 
 5. **Generate the package** by running:
    ```
-   node scripts/copilot-studio/generate-agent-flow.js scripts/copilot-studio/flows/<flow-name>.json "output"
+   node scripts/copilot-studio/generate-agent-flow.js scripts/copilot-studio/flows/<flow-name>.json
    ```
 
 6. **Report the result** to the user:

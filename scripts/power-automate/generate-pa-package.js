@@ -5,7 +5,7 @@
  *   Power Automate → My flows → Import → Import Package (Legacy)
  *
  * Usage:
- *   node generate-pa-package.js <flow-definition.json> [output-name]
+ *   node generate-pa-package.js <flow-definition.json> [output-directory]
  *
  * The flow-definition.json must follow this schema:
  * {
@@ -198,18 +198,44 @@ function buildPackage(flowDef) {
 // ---------------------------------------------------------------------------
 // Write package to disk and create .zip
 // ---------------------------------------------------------------------------
-async function createPackageZip(flowDef, outputName) {
+async function createPackageZip(flowDef, outputDirArg) {
   const pkg = buildPackage(flowDef);
-  const outputDir = path.resolve(outputName || flowDef.displayName.replace(/[^a-zA-Z0-9]/g, '_'));
-  const flowDir = path.join(outputDir, 'Microsoft.Flow', 'flows');
+  const outputDir = path.resolve(outputDirArg || path.join('output', 'power-automate'));
+  const baseName = flowDef.displayName.replace(/[^a-zA-Z0-9]/g, '_');
+
+  // Ensure output directory exists
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
+
+  // Auto-increment version based on existing zips in the output directory
+  let version = '1.0.0.0';
+  const existingZips = fs.readdirSync(outputDir)
+    .filter(f => f.startsWith(baseName + '_') && f.endsWith('.zip'))
+    .sort();
+  if (existingZips.length > 0) {
+    const lastZip = existingZips[existingZips.length - 1];
+    const versionMatch = lastZip.replace(baseName + '_', '').replace('.zip', '');
+    const parts = versionMatch.split('_').map(Number);
+    if (parts.length === 4 && parts.every(n => !isNaN(n))) {
+      parts[3] += 1; // increment build number
+      version = parts.join('.');
+    }
+  }
+
+  // Create temp directory for package files
+  const tempDir = path.join(outputDir, '_temp_package');
+  const flowDir = path.join(tempDir, 'Microsoft.Flow', 'flows');
   const guidDir = path.join(flowDir, pkg.flowGuid);
 
-  // Create directory structure
+  if (fs.existsSync(tempDir)) {
+    fs.rmSync(tempDir, { recursive: true });
+  }
   fs.mkdirSync(guidDir, { recursive: true });
 
   // Write all 5 files
   const files = [
-    [path.join(outputDir, 'manifest.json'), pkg.rootManifest],
+    [path.join(tempDir, 'manifest.json'), pkg.rootManifest],
     [path.join(flowDir, 'manifest.json'), pkg.innerManifest],
     [path.join(guidDir, 'definition.json'), pkg.definition],
     [path.join(guidDir, 'apisMap.json'), pkg.apisMap],
@@ -218,23 +244,24 @@ async function createPackageZip(flowDef, outputName) {
 
   files.forEach(([filePath, data]) => {
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
-    console.log(`  wrote: ${path.relative(outputDir, filePath)}`);
+    console.log(`  wrote: ${path.relative(tempDir, filePath)}`);
   });
 
   // Create zip with forward-slash entry paths.
   // PowerShell's Compress-Archive uses backslashes on Windows, which breaks
   // package imports. Use System.IO.Compression directly instead.
-  const zipPath = outputDir + '.zip';
+  const zipName = `${baseName}_${version.replace(/\./g, '_')}.zip`;
+  const zipPath = path.join(outputDir, zipName);
   const { execSync } = require('child_process');
-  const outputDirWin = outputDir.replace(/\//g, '\\');
+  const tempDirWin = tempDir.replace(/\//g, '\\');
   const zipPathWin = zipPath.replace(/\//g, '\\');
 
-  const psScript = outputDir + '_create_zip.ps1';
+  const psScript = path.join(outputDir, '_create_zip.ps1');
   fs.writeFileSync(psScript, `
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $zipPath = '${zipPathWin}'
-$sourceDir = '${outputDirWin}'
+$sourceDir = '${tempDirWin}'
 if (Test-Path $zipPath) { Remove-Item $zipPath }
 $zip = [System.IO.Compression.ZipFile]::Open($zipPath, 'Create')
 Get-ChildItem -Path $sourceDir -Recurse -File | ForEach-Object {
@@ -249,12 +276,14 @@ $zip.Dispose()
   fs.unlinkSync(psScript);
 
   console.log(`\nPackage created: ${zipPath}`);
+  console.log(`Flow: ${flowDef.displayName}`);
+  console.log(`Version: ${version}`);
   console.log(`Flow GUID: ${pkg.flowGuid}`);
   console.log(`\nImport via: Power Automate > My flows > Import > Import Package (Legacy)`);
 
   // Clean up temp directory
-  fs.rmSync(outputDir, { recursive: true, force: true });
-  console.log(`Cleaned up temp folder: ${outputDir}`);
+  fs.rmSync(tempDir, { recursive: true, force: true });
+  console.log(`Cleaned up temp folder: ${tempDir}`);
 
   return zipPath;
 }
@@ -265,12 +294,17 @@ $zip.Dispose()
 if (require.main === module) {
   const args = process.argv.slice(2);
   if (args.length < 1) {
-    console.error('Usage: node generate-pa-package.js <flow-definition.json> [output-name]');
+    console.error('Usage: node generate-pa-package.js <flow-definition.json> [output-directory]');
+    console.error('');
+    console.error('  output-directory  Where to write the .zip (default: output/power-automate/)');
+    console.error('');
+    console.error('Example:');
+    console.error('  node generate-pa-package.js flows/daily-report.json');
     process.exit(1);
   }
 
   const defPath = path.resolve(args[0]);
-  const outputName = args[1] || undefined;
+  const outputDirArg = args[1] || undefined;
 
   if (!fs.existsSync(defPath)) {
     console.error(`File not found: ${defPath}`);
@@ -280,7 +314,7 @@ if (require.main === module) {
   const flowDef = JSON.parse(fs.readFileSync(defPath, 'utf8'));
   console.log(`Generating package for: ${flowDef.displayName}`);
 
-  createPackageZip(flowDef, outputName).catch(err => {
+  createPackageZip(flowDef, outputDirArg).catch(err => {
     console.error('Error:', err);
     process.exit(1);
   });

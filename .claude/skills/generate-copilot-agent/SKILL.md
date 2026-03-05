@@ -214,7 +214,7 @@ The generated package creates the agent skeleton. After importing into Copilot S
 
 5. **Generate the solution package** by running:
    ```
-   node scripts/copilot-studio/generate-copilot-agent.js scripts/copilot-studio/agents/<agent-name>/<agent-name>.json "output/<OutputName>"
+   node scripts/copilot-studio/generate-copilot-agent.js scripts/copilot-studio/agents/<agent-name>/<agent-name>.json
    ```
 
 5. **Report the result** to the user.

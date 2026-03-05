@@ -8,7 +8,7 @@
  * Reverse-engineered from real Copilot Studio workflow exports (March 2026).
  *
  * Usage:
- *   node generate-agent-flow.js <flow-definition.json> [output-path]
+ *   node generate-agent-flow.js <flow-definition.json> [output-directory]
  *
  * The flow-definition.json schema:
  * {
@@ -395,11 +395,9 @@ function generate(configPath, outputPath) {
   const flowName = config.name || 'Untitled';
   const workflowGuid = newGuid();
 
-  // Derive output path
+  // Derive output path — default to output/ in the working directory
   if (!outputPath) {
-    const baseName = config.solution?.uniqueName ||
-                     flowName.replace(/[^a-zA-Z0-9]/g, '');
-    outputPath = path.join(path.dirname(configPath), baseName);
+    outputPath = path.resolve(path.join('output', 'agent-flows'));
   }
 
   // Build connection reference map
@@ -534,8 +532,10 @@ if (require.main === module) {
   if (args.length < 1) {
     console.error('Usage: node generate-agent-flow.js <flow-definition.json> [output-directory]');
     console.error('');
+    console.error('  output-directory  Where to write the .zip (default: output/agent-flows/)');
+    console.error('');
     console.error('Example:');
-    console.error('  node generate-agent-flow.js flows/copy-file-flow.json output/CopyFileFlow');
+    console.error('  node generate-agent-flow.js flows/copy-file-flow.json');
     process.exit(1);
   }
 
