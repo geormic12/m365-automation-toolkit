@@ -3,7 +3,7 @@
 Reference catalog for all MCP servers, connectors, and tools available in the Microsoft Copilot Studio agent framework. Use this when designing agents to select the right tools for the job.
 
 **Last updated:** 2026-03-05
-**Sources:** Copilot Studio Add Tool > MCP tab (March 2026 screenshot), Shervin Shaffie tutorials, Microsoft Power Platform official (Agent Operative series), DamoBird365, Reza Dorrani, Copilot Studio tutorial playlist, and our generator audit.
+**Sources:** Copilot Studio Add Tool > MCP tab (March 2026, React state extraction), Microsoft Learn connector reference docs, Agent 365 MCP server reference docs, Shervin Shaffie tutorials, Microsoft Power Platform official (Agent Operative series), DamoBird365, Reza Dorrani, Copilot Studio tutorial playlist, and our generator audit.
 
 ---
 
@@ -41,106 +41,115 @@ These are Microsoft's first-party MCP servers, documented at [learn.microsoft.co
 
 **IT Admin governance:** Managed in Microsoft 365 admin center under Agents and Tools. Admins can allow/block servers org-wide. All tool calls are traceable in Microsoft Defender Advanced Hunting.
 
-#### Copilot Studio Built-In Connectors (Non-Agent-365)
+#### Copilot Studio MCP Servers (Connector-Wrapped)
 
-These MCP servers appear in the Copilot Studio "Add Tool > MCP" tab. They use traditional Power Platform connectors wrapped as MCP interfaces.
+These 38 MCP servers appear in the Copilot Studio "Add Tool > MCP" tab. They wrap Power Platform connectors as MCP interfaces, communicating via JSON-RPC. Tool lists are negotiated at runtime through the MCP protocol (`tools/list`) — they are not listed in the connector documentation.
+
+**Architecture:** Two types exist:
+- **Named MCP operations** (`mcp_*`, `msdyn_*`) — Pre-defined tool sets built by Microsoft, scoped to a specific domain (email, calendar, sales, etc.)
+- **Pass-through servers** (`InvokeMCP`, `InvokeServer`) — Generic Streamable HTTP endpoints where the remote vendor defines and controls the tool list
 
 ##### Microsoft 365 — Email, Calendar, Contacts
 
-| MCP Server | Underlying Connector | Purpose |
-|------------|---------------------|---------|
-| **Email Management MCP Server** | Office 365 Outlook | Draft/send emails, manage recipients, attachments |
-| **Meeting Management MCP** | Office 365 Outlook | Create calendar invitations, find schedule openings |
-| **Contact Management MCP Server** | Office 365 Outlook | Manage Outlook contacts |
+| MCP Server | Operation ID | Connector | Tier | Purpose |
+|------------|-------------|-----------|------|---------|
+| **Email Management MCP Server** | `mcp_EmailsManagement` | `shared_office365` | Standard | Draft/send emails, manage recipients, attachments |
+| **Meeting Management MCP Server** | `mcp_MeetingManagement` | `shared_office365` | Standard | Create calendar invitations, find schedule openings |
+| **Contact Management MCP Server** | `mcp_ContactsManagement` | `shared_office365` | Standard | Manage Outlook contacts |
+
+[Connector docs](https://learn.microsoft.com/connectors/office365/)
 
 ##### Microsoft Dataverse
 
-| MCP Server | Underlying Connector | Purpose |
-|------------|---------------------|---------|
-| **Microsoft Dataverse MCP Server** | Microsoft Dataverse | CRUD, queries, schema management (see Agent 365 reference above) |
-| **Dataverse MCP Server (Deprecated)** | Microsoft Dataverse | Legacy version — use Microsoft Dataverse MCP Server instead |
+| MCP Server | Operation ID | Connector | Tier | Purpose |
+|------------|-------------|-----------|------|---------|
+| **Microsoft Dataverse MCP Server** | `InvokeMCP` | `shared_commondataserviceforapps` | Premium | Remote MCP access to Dataverse |
+| **Microsoft Dataverse MCP Server (Preview)** | `InvokeMCPPreview` | `shared_commondataserviceforapps` | Premium | Remote MCP access with preview tools |
+| **Dataverse MCP Server (Deprecated)** | `mcp_DataverseMCPServer` | `shared_commondataserviceforapps` | Premium | Legacy — use Microsoft Dataverse MCP Server |
 
 **Setup:** Requires TDS (Tabular Data Stream) endpoint enabled in environment settings. Admin must configure MCP Client Allow List — Copilot Studio is pre-whitelisted; Power Apps must be added manually with its application ID.
 
-#### Dynamics 365
+[Connector docs](https://learn.microsoft.com/connectors/commondataserviceforapps/)
 
-| MCP Server | Underlying Connector | Purpose |
-|------------|---------------------|---------|
-| **Dynamics 365 Business Central** | Dynamics 365 Business Central | ERP operations for small/mid business |
-| **Dynamics 365 Contact Center** | D365 Contact Center Admin | Contact center administration |
-| **Dynamics 365 Contact Center** | Microsoft Dataverse | Contact center data operations |
-| **Dynamics 365 Conversation Orchestrator** | Microsoft Dataverse | Conversation routing and orchestration |
-| **Dynamics 365 Customer Service** | Dynamics 365 Service MCP | Customer service case management |
-| **Dynamics 365 ERP Analytics** | Dynamics 365 ERP Analytics | ERP reporting and analytics |
-| **Dynamics 365 ERP MCP** | Fin & Ops Apps (Dynamics 365) | Finance & Operations ERP |
-| **Dynamics 365 ERP MCP (Deprecated)** | Microsoft Dataverse | Legacy ERP — use Fin & Ops version |
-| **Dynamics 365 Sales MCP** | Dynamics 365 Sales MCP Server | Sales pipeline, leads, opportunities |
-| **D365 Sales MCP Server (Deprecated)** | Microsoft Dataverse | Legacy sales — use Dynamics 365 Sales MCP |
-| **D365 Service MCP Server (Deprecated)** | Microsoft Dataverse | Legacy service — use Dynamics 365 Customer Service |
+##### Dynamics 365
 
-#### Data & Analytics
+| MCP Server | Operation ID | Connector | Tier | Purpose |
+|------------|-------------|-----------|------|---------|
+| **Dynamics 365 Business Central MCP (Preview)** | `InvokeMCP` | `shared_dynamicssmbsaas` | Premium | ERP operations for small/mid business |
+| **Dynamics 365 Contact Center Admin MCP Server (Preview)** | `msdyn_D365ContactCenterAdminMCPServer` | `shared_d365contactcenteradminmcpserver` | Premium | Contact center administration |
+| **Dynamics 365 Contact Center MCP (Preview)** | `mcp_ContactCenterMCPServer` | `shared_commondataserviceforapps` | Premium | Contact center data operations |
+| **Dynamics 365 Conversation Orchestrator MCP (Preview)** | `mcp_ConversationOrchestratorMCPServer` | `shared_commondataserviceforapps` | Premium | Conversation routing and orchestration |
+| **Dynamics 365 Customer Service MCP Server (Preview)** | `msdyn_ServiceMCPServer` | `shared_d365customerservicemcpserver` | Premium | Customer service case management |
+| **Dynamics 365 ERP Analytics MCP (Preview)** | `msdyn_ERPAnalyticsMCPServer` | `shared_d365erpmcpserver` | Premium | ERP reporting via Business Performance Analytics |
+| **Dynamics 365 ERP MCP** | `InvokeMCP` | `shared_dynamicsax` | Premium | Finance & Operations ERP |
+| **Dynamics 365 Sales MCP (Preview)** | `msdyn_SalesMCPServer` | `shared_d365salesmcpserver` | Premium | Sales pipeline, leads, opportunities |
+| **Dynamics 365 ERP MCP (Deprecated)** | `mcp_ERPMCPServer` | `shared_commondataserviceforapps` | Premium | Legacy — use Dynamics 365 ERP MCP |
+| **D365 Sales MCP Server (deprecated)** | `mcp_SalesMCPServer` | `shared_commondataserviceforapps` | Premium | Legacy — use Dynamics 365 Sales MCP |
+| **D365 Service MCP Server (Deprecated)** | `mcp_ServiceMCPServer` | `shared_commondataserviceforapps` | Premium | Legacy — use Dynamics 365 Customer Service |
 
-| MCP Server | Underlying Connector | Purpose |
-|------------|---------------------|---------|
-| **Azure Databricks Genie** | Azure Databricks | AI-powered data querying on Databricks |
-| **Databricks Genie** | Databricks | Databricks data querying (non-Azure) |
-| **Bigdata.com MCP endpoint** | Bigdata-com | Big data analytics |
-| **CData Connect AI** | CData Connect AI | Universal data connectivity (200+ sources) |
-| **Kusto Query MCP Server** | Azure Data Explorer | KQL queries against Azure Data Explorer |
-| **LSEG data and analytics** | LSEG | Financial data (London Stock Exchange Group) |
-| **Morningstar MCP Server** | Morningstar | Investment research and financial data |
+##### Data & Analytics
 
-#### Security & IT Operations
+| MCP Server | Operation ID | Connector | Tier | Purpose |
+|------------|-------------|-----------|------|---------|
+| **Azure Databricks Genie** | `InvokeGenieMCP` | `shared_databricks` | Premium | AI-powered data querying on Azure Databricks |
+| **Databricks Genie** | `InvokeGenieMCP` | `shared_databricksinc` | Premium | Databricks data querying (non-Azure) |
+| **Bigdata.com MCP endpoint** | `InvokeServer` | `shared_bigdatacom` | Premium | Big data analytics |
+| **CData Connect AI** | `InvokeMCP` | `shared_cdataconnectai` | Premium | Universal data connectivity (350+ sources) |
+| **Kusto Query MCP Server** | `mcp_KustoQueryManagement` | `shared_kusto` | Premium | KQL queries against Azure Data Explorer |
+| **LSEG data and analytics** | `InvokeServer` | `shared_lseg` | Premium | Financial data (London Stock Exchange Group) |
+| **Morningstar MCP Server** | `InvokeServer` | `shared_morningstar` | Premium | Investment research and financial data |
 
-| MCP Server | Underlying Connector | Purpose |
-|------------|---------------------|---------|
-| **Microsoft Sentinel - Data Explorer** | Microsoft Sentinel MCP | Security incident data exploration |
-| **Intelix IOC Analysis** | Intelix IOC Analysis MCP | Threat intelligence / indicator of compromise analysis |
-| **Environment Management MCP** | Power Platform for Admins V2 | Power Platform environment administration |
+##### Security & IT Operations
 
-#### DevOps & Project Management
+| MCP Server | Operation ID | Connector | Tier | Purpose |
+|------------|-------------|-----------|------|---------|
+| **Microsoft Sentinel - Data Exploration MCP Server** | `invokemcpdataexploration` | `shared_sentinelmcp` | Premium | Search tables and query Sentinel data lake via natural language |
+| **Intelix IOC Analysis** | `InvokeMCP` | `shared_intelixiocanalysismc` | Premium | File, URL, IP threat analysis with reputation lookup |
+| **Environment Management MCP Server** | `mcp_EnvironmentManagement` | `shared_powerplatformadminv2` | Standard | Power Platform environment lifecycle management |
 
-| MCP Server | Underlying Connector | Purpose |
-|------------|---------------------|---------|
-| **Github MCP Server** | GitHub | Repos, issues, PRs, code search |
-| **Jira MCP Server** | Jira | Issue tracking, project management |
-| **monday.com MCP** | monday.com | Work management boards and items |
-| **Process Street MCP Server** | Process Street MCP Server | Workflow checklists and SOPs |
+##### DevOps & Project Management
 
-#### Document & Content Management
+| MCP Server | Operation ID | Connector | Tier | Purpose |
+|------------|-------------|-----------|------|---------|
+| **Github MCP Server** | `InvokeMCPServer` | `shared_github` | Standard | Repos, issues, PRs, code search |
+| **Jira MCP Server** | `mcp_JiraIssueManagement` | `shared_jira` | Premium | Issue tracking, project management |
+| **monday.com MCP** | `InvokeMondayMCP` | `shared_mondaycom` | Premium | Work management boards and items |
+| **Process Street MCP Server** | `InvokeMCP` | `shared_processstreetmcpserv` | Premium | Workflows, runs, tasks, form fields, data sets |
 
-| MCP Server | Underlying Connector | Purpose |
-|------------|---------------------|---------|
-| **Box MCP Server** | Box MCP Server | File storage and collaboration |
-| **Docusign MCP Server** | Docusign Demo | `send_envelope`, `get_envelope_templates`, eSignature |
-| **Microsoft Learn Docs MCP Server** | Microsoft Learn Docs MCP | `microsoft_doc_search` — semantic search across MS docs |
+##### Document & Content Management
 
-#### Sales, Marketing & Intelligence
+| MCP Server | Operation ID | Connector | Tier | Purpose |
+|------------|-------------|-----------|------|---------|
+| **Box MCP Server** | `InvokeMCP` | `shared_boxmcpserver` | Premium | Search content, ask questions on docs, extract insights |
+| **Docusign MCP Server** | `mcp_Docusign` | `shared_docusigndemo` | Standard | Create/commit/manage agreements across lifecycle |
+| **Microsoft Learn Docs MCP Server** | `microsoft_docs_search` | `shared_microsoftlearndocsmcpserver` | Premium | Semantic search across Microsoft Learn content |
 
-| MCP Server | Underlying Connector | Purpose |
-|------------|---------------------|---------|
-| **MCP server for Salesforce** | Salesforce | CRM — leads, contacts, opportunities, accounts |
-| **Enlyft MCP** | Enlyft MCP | B2B account intelligence and technographics |
-| **Invoke Highspot MCP** | Highspot MCP | Sales enablement — content, training, analytics |
-| **Draup MCP Server** | Draup MCP Server | AI-driven talent and sales intelligence |
+##### Sales, Marketing & Intelligence
 
-#### Business Process & Automation
+| MCP Server | Operation ID | Connector | Tier | Purpose |
+|------------|-------------|-----------|------|---------|
+| **MCP server for Salesforce** | `mcp_SalesforceManagement` | `shared_salesforce` | Premium | CRM — leads, contacts, opportunities, accounts |
+| **Enlyft MCP** | `InvokeServer` | `shared_enlyftmcp` | Premium | B2B account intelligence, tech adoption signals, fit scores |
+| **Invoke Highspot MCP Production Server** | `InvokeServer` | `shared_highspotmcptestjan20` | Premium | Sales enablement — content, training, analytics |
+| **Draup MCP Server** | `InvokeMCP` | `shared_draupmcpserver` | Premium | Company, industry, and market ecosystem intelligence |
 
-| MCP Server | Underlying Connector | Purpose |
-|------------|---------------------|---------|
-| **Celonis MCP Server** | Celonis MCP Server | Process mining and execution management |
-| **Process Mining MCP (Preview)** | Process Mining | Microsoft Process Mining analytics |
-| **Experlogix Smart Flows MCP** | Experlogix Smart Flows | Document automation and CPQ |
-| **Zapier MCP** | Zapier MCP | Connect to 7,000+ apps via Zapier |
+##### Business Process & Automation
 
-#### Industry & Specialty
+| MCP Server | Operation ID | Connector | Tier | Purpose |
+|------------|-------------|-----------|------|---------|
+| **Celonis MCP Server** | `InvokeServer` | `shared_celonismcpserver` | Premium | Process mining, real-time context, trigger external actions |
+| **Process Mining MCP (Preview)** | `InvokeMCP` | `shared_processmining` | Premium | Microsoft Process Mining analytics |
+| **Experlogix Smart Flows MCP Server** | `InvokeMCP` | `shared_experlogixsmartflows` | Premium | Document automation and CPQ |
+| **Zapier MCP** | `InvokeServer` | `shared_zapiermcp` | Premium | Connect to 7,000+ apps via Zapier |
 
-| MCP Server | Underlying Connector | Purpose |
-|------------|---------------------|---------|
-| **Ezekia** | Ezekia-MCP | Executive search / recruitment CRM |
-| **Gieni Actions** | Gieni TS Server MCP | AI data fetching and analytics |
-| **Mobile Text Alerts MCP Server** | Mobile Text Alerts MCP Server | SMS/text message campaigns |
-| **Store Operations MCP (Preview)** | Store Operations MCP | Retail store operations management |
+##### Industry & Specialty
+
+| MCP Server | Operation ID | Connector | Tier | Purpose |
+|------------|-------------|-----------|------|---------|
+| **Ezekia** | `InvokeServer` | `shared_ezekiamcp` | Premium | Executive search / recruitment CRM (natural language CRUD) |
+| **Gieni Actions for fetching answers** | `GieniTSserver` | `shared_gienitsservermcp` | Premium | AI data fetching and analytics |
+| **Mobile Text Alerts MCP Server** | `InvokeServer` | `shared_mobiletextalertsmcps` | Premium | SMS messages, subscriber management |
+| **Store Operations MCP (Preview)** | `InvokeMCP` | `shared_storeoperationsmcpserver` | Premium | Retail store operations insights and recommendations |
 
 ### MCP Pipeline (Coming Soon)
 

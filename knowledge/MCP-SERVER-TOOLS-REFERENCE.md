@@ -219,6 +219,87 @@ These servers appear in the [built-in catalog](https://learn.microsoft.com/en-us
 
 ---
 
+# Connector-Wrapped MCP Servers
+
+These MCP servers are built on top of Power Platform connectors (e.g., Office 365 Outlook, SharePoint, Teams). They expose connector operations as MCP tools. Unlike the Agent 365 servers above (which use generic Streamable HTTP pass-through), these have **predefined tool sets** with named operations.
+
+**Source:** Extracted via the Power Platform `listtools` API from Copilot Studio (March 2026).
+
+**API endpoint:** `POST /powervirtualagents/bots/{botId}/modelcontextprotocol/listtools?api-version=2022-03-01-preview`
+
+---
+
+## Email Management MCP Server
+
+**Connector:** Office 365 Outlook
+**Schema:** `Office365Outlook-EmailManagementMCPServer`
+**Tools:** 6
+
+| Tool | Description | Required Params | Optional Params |
+|------|-------------|-----------------|-----------------|
+| `SendEmail` | Send an email message | To, Subject, Body | Cc, Bcc |
+| `ReplyToEmail` | Reply to an email message | messageId, Body | ReplyAll, Cc, To, Bcc, Subject |
+| `GetEmail` | Gets an email message | messageId | includeAttachments |
+| `ListEmails` | Lists email messages | *(none)* | includeAttachments, folderPath, subjectFilter, to, top (max 1000), from |
+| `FlagEmail` | Flag an email message | messageId | flagStatus (flagged/notFlagged/complete) |
+| `ForwardEmail` | Forward an email message | message_id, ToRecipients | *(none)* |
+
+---
+
+## Contact Management MCP Server
+
+**Connector:** Office 365 Outlook
+**Schema:** `Office365Outlook-ContactManagementMCPServer`
+**Tools:** 5
+
+| Tool | Description | Required Params | Optional Params |
+|------|-------------|-----------------|-----------------|
+| `GetContactFolders` | Get contact folders | *(none)* | *(none)* |
+| `GetContact` | Get a contact | id, folder | *(none)* |
+| `CreateContact` | Create a contact in a contacts folder | homePhones, folder, givenName | *(none)* |
+| `UpdateContact` | Update a contact in a contacts folder | id, homePhones, folder, givenName | *(none)* |
+| `ListContactsFromFolder` | Lists contacts from a contacts folder | folder | $top |
+
+---
+
+## Meeting Management MCP Server
+
+**Connector:** Office 365 Outlook
+**Schema:** `Office365Outlook-MeetingManagementMCPServer`
+**Tools:** 9
+
+| Tool | Description | Required Params | Optional Params |
+|------|-------------|-----------------|-----------------|
+| `GetCalendars` | Gets calendars for user | *(none)* | top |
+| `GetCalendarViewOfMeetings` | Get calendar view of meetings in a calendar | startDateTimeUtc, calendarId, endDateTimeUtc | $top, search |
+| `GetMeetings` | Get meetings in a calendar | table (calendarId) | $top |
+| `GetRooms` | Get meeting rooms with names and addresses | *(none)* | *(none)* |
+| `AcceptAMeetingInvite` | Accept a meeting invite | event_id | *(none)* |
+| `DeclineAMeetingInvite` | Decline a meeting invite | event_id | *(none)* |
+| `TentativelyAcceptAMeetingInvite` | Tentatively accept a meeting invite | event_id | *(none)* |
+| `UpdateMeeting` | Update a meeting in a calendar | end, timeZone, id, table, start, subject | optionalAttendees, body, location, requiredAttendees |
+| `CreateMeeting` | Create a meeting in a calendar | end, timeZone, table, start, subject | optionalAttendees, body, location, requiredAttendees |
+
+**Note:** `timeZone` is an enum with 130+ timezone values. `table` refers to Calendar ID — use `GetCalendars` to discover IDs.
+
+---
+
+## Microsoft Learn Docs MCP Server
+
+**Connector:** Microsoft Learn Docs MCP (standalone)
+**Schema:** `MicrosoftLearnDocsMCP-MicrosoftLearnDocsMCPServer`
+**Tools:** 3
+
+| Tool | Description | Required Params | Optional Params |
+|------|-------------|-----------------|-----------------|
+| `microsoft_docs_search` | Search official Microsoft/Azure documentation. Returns up to 10 content chunks (max 500 tokens each) with title, URL, and excerpt. | *(none — query is auto)* | query |
+| `microsoft_code_sample_search` | Search for code snippets in Microsoft Learn docs. Returns code samples with best practices. | query | language (csharp, javascript, typescript, python, powershell, azurecli, al, sql, java, kusto, cpp, go, rust, ruby, php) |
+| `microsoft_docs_fetch` | Fetch and convert a Microsoft Learn doc page to markdown. Full content with headings, code blocks, tables, links. | url | *(none)* |
+
+**Note:** This is a true pass-through MCP server (not connector-wrapped). Use `microsoft_docs_search` first, then `microsoft_docs_fetch` for complete content on high-value pages.
+
+---
+
 ## Sources
 
 - [Agent 365 Tooling Servers Overview](https://learn.microsoft.com/en-us/microsoft-agent-365/tooling-servers-overview)
