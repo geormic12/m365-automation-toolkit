@@ -17,7 +17,35 @@ MCP (Model Context Protocol) servers are the preferred integration method in Cop
 
 ### Complete MCP Server Catalog
 
-#### Microsoft 365 — Email, Calendar, Contacts
+> **Full tool-level reference:** See [`MCP-SERVER-TOOLS-REFERENCE.md`](MCP-SERVER-TOOLS-REFERENCE.md) for every tool name, parameters, and usage notes.
+
+#### Microsoft Agent 365 MCP Servers (Enterprise-Grade)
+
+These are Microsoft's first-party MCP servers, documented at [learn.microsoft.com](https://learn.microsoft.com/en-us/microsoft-agent-365/tooling-servers-overview). They go through the Agent 365 Tooling Gateway with governance, DLP, MIP, and Defender observability. Some require the [Frontier preview program](https://adoption.microsoft.com/copilot/frontier-program/).
+
+| MCP Server | Server ID | Tools | Purpose |
+|------------|-----------|-------|---------|
+| **Microsoft Outlook Mail MCP** | `mcp_MailTools` | 10 | Create/send/search emails, reply, draft management, KQL search |
+| **Microsoft Outlook Calendar MCP** | `mcp_CalendarTools` | 11 | Create/update/delete events, accept/decline, find meeting times, free/busy |
+| **Microsoft Teams MCP** | `mcp_TeamsServer` | 25 | Chat CRUD, channel CRUD, post messages, member management |
+| **Microsoft SharePoint & OneDrive MCP** | `mcp_ODSPRemoteServer` | 17 | Files, folders, sites, libraries, sharing, sensitivity labels |
+| **Microsoft Word MCP** | `mcp_WordServer` | 4 | Create docs, read content, add/reply to comments |
+| **Microsoft 365 User Profile MCP** | `mcp_MeServer` | 6 | User profiles, org hierarchy, people search |
+| **Microsoft 365 Copilot Search MCP** | `mcp_M365Copilot` | 1 | Cross-M365 content search with multi-turn conversation |
+| **Microsoft Dataverse MCP** | (env-specific) | 11 | Tables CRUD, record CRUD, T-SQL queries, keyword search |
+| **Microsoft SharePoint Lists MCP** | — | — | SharePoint list operations (not yet detailed in docs) |
+| **Microsoft 365 Admin Center MCP** | — | — | Admin center management (not yet detailed in docs) |
+| **Microsoft Fabric MCP** | — | — | Fabric data analytics (not yet detailed in docs) |
+
+**Total Agent 365 tools: 85+** across 8 documented servers.
+
+**IT Admin governance:** Managed in Microsoft 365 admin center under Agents and Tools. Admins can allow/block servers org-wide. All tool calls are traceable in Microsoft Defender Advanced Hunting.
+
+#### Copilot Studio Built-In Connectors (Non-Agent-365)
+
+These MCP servers appear in the Copilot Studio "Add Tool > MCP" tab. They use traditional Power Platform connectors wrapped as MCP interfaces.
+
+##### Microsoft 365 — Email, Calendar, Contacts
 
 | MCP Server | Underlying Connector | Purpose |
 |------------|---------------------|---------|
@@ -25,13 +53,11 @@ MCP (Model Context Protocol) servers are the preferred integration method in Cop
 | **Meeting Management MCP** | Office 365 Outlook | Create calendar invitations, find schedule openings |
 | **Contact Management MCP Server** | Office 365 Outlook | Manage Outlook contacts |
 
-**Note:** The earlier "Outlook Mail MCP" and "Microsoft Word MCP" from Dec 2025 tutorials appear to have been renamed/reorganized into these servers.
-
-#### Microsoft Dataverse
+##### Microsoft Dataverse
 
 | MCP Server | Underlying Connector | Purpose |
 |------------|---------------------|---------|
-| **Microsoft Dataverse MCP Server** | Microsoft Dataverse | `list_tables`, `describe_tables`, `read_query` (NL→SQL), `create_record`, `update_record`, `delete_record` |
+| **Microsoft Dataverse MCP Server** | Microsoft Dataverse | CRUD, queries, schema management (see Agent 365 reference above) |
 | **Dataverse MCP Server (Deprecated)** | Microsoft Dataverse | Legacy version — use Microsoft Dataverse MCP Server instead |
 
 **Setup:** Requires TDS (Tabular Data Stream) endpoint enabled in environment settings. Admin must configure MCP Client Allow List — Copilot Studio is pre-whitelisted; Power Apps must be added manually with its application ID.
