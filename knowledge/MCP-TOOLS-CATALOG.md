@@ -3,7 +3,7 @@
 Reference catalog for all MCP servers, connectors, and tools available in the Microsoft Copilot Studio agent framework. Use this when designing agents to select the right tools for the job.
 
 **Last updated:** 2026-03-05
-**Sources:** Shervin Shaffie tutorials, Microsoft Power Platform official (Agent Operative series), DamoBird365, Reza Dorrani, Copilot Studio tutorial playlist, and our generator audit.
+**Sources:** Copilot Studio Add Tool > MCP tab (March 2026 screenshot), Shervin Shaffie tutorials, Microsoft Power Platform official (Agent Operative series), DamoBird365, Reza Dorrani, Copilot Studio tutorial playlist, and our generator audit.
 
 ---
 
@@ -13,40 +13,125 @@ MCP (Model Context Protocol) servers are the preferred integration method in Cop
 
 **Access:** Copilot Studio > Agent > Tools > Add Tool > MCP tab
 **Required URL:** `copilotstudio.preview.microsoft.com` (preview features)
+**Total count:** 46 MCP servers (as of March 2026)
 
-### Confirmed MCP Servers
+### Complete MCP Server Catalog
 
-| MCP Server | Tools Available | Demonstrated In |
-|------------|----------------|-----------------|
-| **Outlook Mail MCP** | Draft emails, send emails, add attachments, manage recipients | Dec 2025 automation tutorial |
-| **Microsoft Word MCP** | Create new Word documents, populate with structured content | Dec 2025 automation tutorial |
-| **Meeting Management MCP** | Create calendar invitations, find schedule openings | Dec 2025 automation tutorial |
-| **Microsoft Teams MCP** | Send Teams messages, create/reuse chats | Jan 2026 autonomous agent tutorial |
-| **Dataverse MCP Server** | `list_tables`, `describe_tables`, `read_query` (NL→SQL), `create_record`, `update_record`, `delete_record` | Reza Dorrani Dec 2025, Copilot Studio playlist Jul 2025 |
-| **DocuSign MCP Server** | `send_envelope`, `get_envelope_templates`, `get_current_docusign_account` | Jul 2025 MCP tutorial |
-| **Box MCP Server** | File management (newly added Jul 2025) | Jul 2025 MCP tutorial |
-| **Microsoft Learn MCP** | `microsoft_doc_search` (semantic vector search against MS docs) | DamoBird365 Jul 2025 — requires custom connector setup |
+#### Microsoft 365 — Email, Calendar, Contacts
 
-**Dataverse MCP Server setup:** Requires TDS (Tabular Data Stream) endpoint enabled in environment settings. Admin must configure MCP Client Allow List — Copilot Studio is pre-whitelisted; Power Apps must be added manually with its application ID.
+| MCP Server | Underlying Connector | Purpose |
+|------------|---------------------|---------|
+| **Email Management MCP Server** | Office 365 Outlook | Draft/send emails, manage recipients, attachments |
+| **Meeting Management MCP** | Office 365 Outlook | Create calendar invitations, find schedule openings |
+| **Contact Management MCP Server** | Office 365 Outlook | Manage Outlook contacts |
 
-### Coming Soon (MCP Pipeline)
+**Note:** The earlier "Outlook Mail MCP" and "Microsoft Word MCP" from Dec 2025 tutorials appear to have been renamed/reorganized into these servers.
 
-From Microsoft Agent 365 security team (Feb 2026): Dynamics 365, Planner, Fabric IQ, Sentinel, Project, Windows MCP (local + remote) MCP servers are in the pipeline. Tooling Gateway provides standardized control and MCP servers are tested across multiple LLMs for deterministic output.
+#### Microsoft Dataverse
+
+| MCP Server | Underlying Connector | Purpose |
+|------------|---------------------|---------|
+| **Microsoft Dataverse MCP Server** | Microsoft Dataverse | `list_tables`, `describe_tables`, `read_query` (NL→SQL), `create_record`, `update_record`, `delete_record` |
+| **Dataverse MCP Server (Deprecated)** | Microsoft Dataverse | Legacy version — use Microsoft Dataverse MCP Server instead |
+
+**Setup:** Requires TDS (Tabular Data Stream) endpoint enabled in environment settings. Admin must configure MCP Client Allow List — Copilot Studio is pre-whitelisted; Power Apps must be added manually with its application ID.
+
+#### Dynamics 365
+
+| MCP Server | Underlying Connector | Purpose |
+|------------|---------------------|---------|
+| **Dynamics 365 Business Central** | Dynamics 365 Business Central | ERP operations for small/mid business |
+| **Dynamics 365 Contact Center** | D365 Contact Center Admin | Contact center administration |
+| **Dynamics 365 Contact Center** | Microsoft Dataverse | Contact center data operations |
+| **Dynamics 365 Conversation Orchestrator** | Microsoft Dataverse | Conversation routing and orchestration |
+| **Dynamics 365 Customer Service** | Dynamics 365 Service MCP | Customer service case management |
+| **Dynamics 365 ERP Analytics** | Dynamics 365 ERP Analytics | ERP reporting and analytics |
+| **Dynamics 365 ERP MCP** | Fin & Ops Apps (Dynamics 365) | Finance & Operations ERP |
+| **Dynamics 365 ERP MCP (Deprecated)** | Microsoft Dataverse | Legacy ERP — use Fin & Ops version |
+| **Dynamics 365 Sales MCP** | Dynamics 365 Sales MCP Server | Sales pipeline, leads, opportunities |
+| **D365 Sales MCP Server (Deprecated)** | Microsoft Dataverse | Legacy sales — use Dynamics 365 Sales MCP |
+| **D365 Service MCP Server (Deprecated)** | Microsoft Dataverse | Legacy service — use Dynamics 365 Customer Service |
+
+#### Data & Analytics
+
+| MCP Server | Underlying Connector | Purpose |
+|------------|---------------------|---------|
+| **Azure Databricks Genie** | Azure Databricks | AI-powered data querying on Databricks |
+| **Databricks Genie** | Databricks | Databricks data querying (non-Azure) |
+| **Bigdata.com MCP endpoint** | Bigdata-com | Big data analytics |
+| **CData Connect AI** | CData Connect AI | Universal data connectivity (200+ sources) |
+| **Kusto Query MCP Server** | Azure Data Explorer | KQL queries against Azure Data Explorer |
+| **LSEG data and analytics** | LSEG | Financial data (London Stock Exchange Group) |
+| **Morningstar MCP Server** | Morningstar | Investment research and financial data |
+
+#### Security & IT Operations
+
+| MCP Server | Underlying Connector | Purpose |
+|------------|---------------------|---------|
+| **Microsoft Sentinel - Data Explorer** | Microsoft Sentinel MCP | Security incident data exploration |
+| **Intelix IOC Analysis** | Intelix IOC Analysis MCP | Threat intelligence / indicator of compromise analysis |
+| **Environment Management MCP** | Power Platform for Admins V2 | Power Platform environment administration |
+
+#### DevOps & Project Management
+
+| MCP Server | Underlying Connector | Purpose |
+|------------|---------------------|---------|
+| **Github MCP Server** | GitHub | Repos, issues, PRs, code search |
+| **Jira MCP Server** | Jira | Issue tracking, project management |
+| **monday.com MCP** | monday.com | Work management boards and items |
+| **Process Street MCP Server** | Process Street MCP Server | Workflow checklists and SOPs |
+
+#### Document & Content Management
+
+| MCP Server | Underlying Connector | Purpose |
+|------------|---------------------|---------|
+| **Box MCP Server** | Box MCP Server | File storage and collaboration |
+| **Docusign MCP Server** | Docusign Demo | `send_envelope`, `get_envelope_templates`, eSignature |
+| **Microsoft Learn Docs MCP Server** | Microsoft Learn Docs MCP | `microsoft_doc_search` — semantic search across MS docs |
+
+#### Sales, Marketing & Intelligence
+
+| MCP Server | Underlying Connector | Purpose |
+|------------|---------------------|---------|
+| **MCP server for Salesforce** | Salesforce | CRM — leads, contacts, opportunities, accounts |
+| **Enlyft MCP** | Enlyft MCP | B2B account intelligence and technographics |
+| **Invoke Highspot MCP** | Highspot MCP | Sales enablement — content, training, analytics |
+| **Draup MCP Server** | Draup MCP Server | AI-driven talent and sales intelligence |
+
+#### Business Process & Automation
+
+| MCP Server | Underlying Connector | Purpose |
+|------------|---------------------|---------|
+| **Celonis MCP Server** | Celonis MCP Server | Process mining and execution management |
+| **Process Mining MCP (Preview)** | Process Mining | Microsoft Process Mining analytics |
+| **Experlogix Smart Flows MCP** | Experlogix Smart Flows | Document automation and CPQ |
+| **Zapier MCP** | Zapier MCP | Connect to 7,000+ apps via Zapier |
+
+#### Industry & Specialty
+
+| MCP Server | Underlying Connector | Purpose |
+|------------|---------------------|---------|
+| **Ezekia** | Ezekia-MCP | Executive search / recruitment CRM |
+| **Gieni Actions** | Gieni TS Server MCP | AI data fetching and analytics |
+| **Mobile Text Alerts MCP Server** | Mobile Text Alerts MCP Server | SMS/text message campaigns |
+| **Store Operations MCP (Preview)** | Store Operations MCP | Retail store operations management |
+
+### MCP Pipeline (Coming Soon)
+
+From Microsoft Agent 365 security team (Feb 2026): Planner, Fabric IQ, Project, and Windows MCP (local + remote) are still in the pipeline. Tooling Gateway provides standardized control and MCP servers are tested across multiple LLMs for deterministic output.
+
+**Note:** Dynamics 365 and Sentinel MCP servers, previously listed as "coming soon," are now live (see catalog above).
 
 ### Adding External MCP Servers
 
 Copilot Studio only supports **Streamable HTTP** transport — SSE is NOT supported. To add external MCP servers not natively listed, use the custom connector import path from GitHub. See BEST-PRACTICES.md §4.4 for step-by-step process.
-
-### Growing List
-
-Shervin notes "every time I come here I see a new one" — the MCP server list is actively expanding. Check the Add Tool > MCP tab in Copilot Studio for the latest.
 
 ### Known Limitations
 
 | MCP Server | Limitation | Workaround |
 |------------|-----------|------------|
 | Meeting Management MCP | Cannot generate a Teams meeting link | Tell recipient "I'll update with a Teams link after acceptance" |
-| Outlook Mail MCP | Connection manager may show "not connected" after auth | Re-authenticate via connection manager in test panel |
+| Email Management MCP | Connection manager may show "not connected" after auth | Re-authenticate via connection manager in test panel |
 | All MCP servers | Per-user authentication required on first use | Include setup instructions in agent deployment docs |
 
 ---
