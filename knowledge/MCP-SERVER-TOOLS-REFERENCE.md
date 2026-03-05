@@ -221,11 +221,23 @@ These servers appear in the [built-in catalog](https://learn.microsoft.com/en-us
 
 # Connector-Wrapped MCP Servers
 
-These MCP servers are built on top of Power Platform connectors (e.g., Office 365 Outlook, SharePoint, Teams). They expose connector operations as MCP tools. Unlike the Agent 365 servers above (which use generic Streamable HTTP pass-through), these have **predefined tool sets** with named operations.
+These MCP servers are built on top of Power Platform connectors (e.g., Office 365 Outlook, Microsoft Dataverse, Microsoft Learn Docs). They expose connector operations as MCP tools within Copilot Studio. Unlike the Agent 365 servers above (which use generic Streamable HTTP pass-through), these have **predefined tool sets** with named operations and typed parameters.
 
-**Source:** Extracted via the Power Platform `listtools` API from Copilot Studio (March 2026).
+**Source:** Captured via the Power Platform `listtools` API from Copilot Studio (March 2026).
 
 **API endpoint:** `POST /powervirtualagents/bots/{botId}/modelcontextprotocol/listtools?api-version=2022-03-01-preview`
+
+**Total servers captured:** 7 (59 tools)
+
+| Server | Connector | Tools |
+|--------|-----------|-------|
+| Email Management | Office 365 Outlook | 6 |
+| Contact Management | Office 365 Outlook | 5 |
+| Meeting Management | Office 365 Outlook | 9 |
+| Microsoft Learn Docs | Microsoft Learn Docs MCP | 3 |
+| Microsoft Dataverse | Microsoft Dataverse | 10 |
+| D365 Contact Center (Preview) | Microsoft Dataverse | 25 |
+| D365 Conversation Orchestrator (Preview) | Microsoft Dataverse | 1 |
 
 ---
 
@@ -238,11 +250,11 @@ These MCP servers are built on top of Power Platform connectors (e.g., Office 36
 | Tool | Description | Required Params | Optional Params |
 |------|-------------|-----------------|-----------------|
 | `SendEmail` | Send an email message | To, Subject, Body | Cc, Bcc |
-| `ReplyToEmail` | Reply to an email message | messageId, Body | ReplyAll, Cc, To, Bcc, Subject |
-| `GetEmail` | Gets an email message | messageId | includeAttachments |
-| `ListEmails` | Lists email messages | *(none)* | includeAttachments, folderPath, subjectFilter, to, top (max 1000), from |
-| `FlagEmail` | Flag an email message | messageId | flagStatus (flagged/notFlagged/complete) |
-| `ForwardEmail` | Forward an email message | message_id, ToRecipients | *(none)* |
+| `ReplyToEmail` | Reply to an email message | messageId, Body | ReplyAll (bool), Cc, To, Bcc, Subject |
+| `GetEmail` | Get an email message by ID | messageId | includeAttachments (bool) |
+| `ListEmails` | List email messages from a folder | *(none)* | includeAttachments (bool), folderPath, subjectFilter, to, top (number, max 1000), from |
+| `FlagEmail` | Flag or unflag an email message | messageId | flagStatus (enum: flagged, notFlagged, complete) |
+| `ForwardEmail` | Forward an email message to recipients | message_id, ToRecipients | *(none)* |
 
 ---
 
@@ -254,11 +266,13 @@ These MCP servers are built on top of Power Platform connectors (e.g., Office 36
 
 | Tool | Description | Required Params | Optional Params |
 |------|-------------|-----------------|-----------------|
-| `GetContactFolders` | Get contact folders | *(none)* | *(none)* |
-| `GetContact` | Get a contact | id, folder | *(none)* |
-| `CreateContact` | Create a contact in a contacts folder | homePhones, folder, givenName | *(none)* |
-| `UpdateContact` | Update a contact in a contacts folder | id, homePhones, folder, givenName | *(none)* |
-| `ListContactsFromFolder` | Lists contacts from a contacts folder | folder | $top |
+| `GetContactFolders` | Get all contact folders for the user | *(none)* | *(none)* |
+| `GetContact` | Get a single contact by ID from a folder | id, folder | *(none)* |
+| `CreateContact` | Create a new contact in a contacts folder | homePhones (array), folder, givenName | *(none)* |
+| `UpdateContact` | Update an existing contact in a folder | id, homePhones (array), folder, givenName | *(none)* |
+| `ListContactsFromFolder` | List contacts from a specific folder | folder | $top (number) |
+
+**Note:** `homePhones` is a JSON array of phone number strings, required even for contacts without phone numbers (pass `[]`).
 
 ---
 
@@ -270,38 +284,143 @@ These MCP servers are built on top of Power Platform connectors (e.g., Office 36
 
 | Tool | Description | Required Params | Optional Params |
 |------|-------------|-----------------|-----------------|
-| `GetCalendars` | Gets calendars for user | *(none)* | top |
-| `GetCalendarViewOfMeetings` | Get calendar view of meetings in a calendar | startDateTimeUtc, calendarId, endDateTimeUtc | $top, search |
-| `GetMeetings` | Get meetings in a calendar | table (calendarId) | $top |
-| `GetRooms` | Get meeting rooms with names and addresses | *(none)* | *(none)* |
-| `AcceptAMeetingInvite` | Accept a meeting invite | event_id | *(none)* |
-| `DeclineAMeetingInvite` | Decline a meeting invite | event_id | *(none)* |
-| `TentativelyAcceptAMeetingInvite` | Tentatively accept a meeting invite | event_id | *(none)* |
-| `UpdateMeeting` | Update a meeting in a calendar | end, timeZone, id, table, start, subject | optionalAttendees, body, location, requiredAttendees |
-| `CreateMeeting` | Create a meeting in a calendar | end, timeZone, table, start, subject | optionalAttendees, body, location, requiredAttendees |
+| `GetCalendars` | Get the user's calendars | *(none)* | top (number) |
+| `GetCalendarViewOfMeetings` | Get calendar view of meetings within a date range | startDateTimeUtc, calendarId, endDateTimeUtc | $top (number), search |
+| `GetMeetings` | Get meetings from a specific calendar | table (calendarId) | $top (number) |
+| `GetRooms` | Get available meeting rooms with names and addresses | *(none)* | *(none)* |
+| `AcceptAMeetingInvite` | Accept a meeting invitation | event_id | *(none)* |
+| `DeclineAMeetingInvite` | Decline a meeting invitation | event_id | *(none)* |
+| `TentativelyAcceptAMeetingInvite` | Tentatively accept a meeting invitation | event_id | *(none)* |
+| `UpdateMeeting` | Update an existing meeting in a calendar | end, timeZone (enum), id, table (calendarId), start, subject | optionalAttendees, body, location, requiredAttendees |
+| `CreateMeeting` | Create a new meeting in a calendar | end, timeZone (enum), table (calendarId), start, subject | optionalAttendees, body, location, requiredAttendees |
 
-**Note:** `timeZone` is an enum with 130+ timezone values. `table` refers to Calendar ID — use `GetCalendars` to discover IDs.
+**Notes:**
+- `timeZone` is an enum with **130+ timezone values** (e.g., `Eastern Standard Time`, `UTC`, `Pacific Standard Time`). The full list is not reproduced here — use the `listtools` API response to see all values.
+- `table` refers to the Calendar ID. Use `GetCalendars` first to discover available calendar IDs.
+- `start` and `end` are datetime strings in the format expected by the calendar API.
 
 ---
 
 ## Microsoft Learn Docs MCP Server
 
-**Connector:** Microsoft Learn Docs MCP (standalone)
+**Connector:** Microsoft Learn Docs MCP (standalone — not connector-wrapped)
 **Schema:** `MicrosoftLearnDocsMCP-MicrosoftLearnDocsMCPServer`
 **Tools:** 3
 
 | Tool | Description | Required Params | Optional Params |
 |------|-------------|-----------------|-----------------|
-| `microsoft_docs_search` | Search official Microsoft/Azure documentation. Returns up to 10 content chunks (max 500 tokens each) with title, URL, and excerpt. | *(none — query is auto)* | query |
-| `microsoft_code_sample_search` | Search for code snippets in Microsoft Learn docs. Returns code samples with best practices. | query | language (csharp, javascript, typescript, python, powershell, azurecli, al, sql, java, kusto, cpp, go, rust, ruby, php) |
-| `microsoft_docs_fetch` | Fetch and convert a Microsoft Learn doc page to markdown. Full content with headings, code blocks, tables, links. | url | *(none)* |
+| `microsoft_docs_search` | Search official Microsoft and Azure documentation. Returns up to 10 content chunks (max 500 tokens each) with title, URL, and excerpt. | *(none)* | query |
+| `microsoft_code_sample_search` | Search for code samples in Microsoft Learn docs. Returns snippets with best practices. | query | language (enum: csharp, javascript, typescript, python, powershell, azurecli, al, sql, java, kusto, cpp, go, rust, ruby, php) |
+| `microsoft_docs_fetch` | Fetch a full Microsoft Learn doc page and convert to markdown. Returns complete content with headings, code blocks, tables, and links. | url (must be a microsoft.com HTML page) | *(none)* |
 
-**Note:** This is a true pass-through MCP server (not connector-wrapped). Use `microsoft_docs_search` first, then `microsoft_docs_fetch` for complete content on high-value pages.
+**Usage pattern:** Use `microsoft_docs_search` first to find relevant pages, then `microsoft_docs_fetch` to retrieve full content for high-value results.
+
+---
+
+## Microsoft Dataverse MCP Server
+
+**Connector:** Microsoft Dataverse
+**Schema:** `MicrosoftDataverse-MicrosoftDataverseMCPServer`
+**Tools:** 10
+
+| Tool | Description | Required Params | Optional Params |
+|------|-------------|-----------------|-----------------|
+| `list_tables` | List all tables in the Dataverse environment | *(none)* | *(none)* |
+| `describe_table` | Get the T-SQL schema for a table (columns, types, relationships) | tablename | *(none)* |
+| `read_query` | Execute a SELECT query against Dataverse data | querytext | *(none)* |
+| `create_table` | Create a new table with columns | tablename, item (JSON array of column definitions), displayname | description |
+| `update_table` | Add columns to an existing table | tablename, item (JSON array of column definitions) | newDisplayName, description |
+| `delete_table` | Permanently delete a table and all its data | tablename, hasUserApproved (bool) | *(none)* |
+| `create_record` | Insert a new record into a table | tablename, item (JSON object of property values) | *(none)* |
+| `update_record` | Update an existing record by GUID | tablename, recordId (GUID), item (JSON object of property values) | *(none)* |
+| `delete_record` | Delete a record by GUID | tablename, recordId, hasUserApproved (bool) | *(none)* |
+| `fetch` | Get full record details by entity name and record ID | id (format: `entityname/recordid`) | *(none)* |
+
+**`read_query` SQL support and limitations:**
+
+Supported: `SELECT`, `TOP`, `WHERE`, `ORDER BY`, `GROUP BY`, `JOIN` (inner and outer)
+
+Not supported: subqueries, `HAVING`, `DISTINCT`, `OFFSET`, `UNION`, `CAST`, `CASE`
+
+**`create_table` column types:** choice, multiselect, customer, multiline text, duration, time zone, language, phone, email, url, lookup, money, string, integer, decimal, boolean, datetime, double, text area, ticker symbol, rich text, file, image
+
+**Note:** The `hasUserApproved` boolean on `delete_table` and `delete_record` is a safety gate — set to `true` to confirm the destructive operation. The agent should always confirm with the user before passing `true`.
+
+---
+
+## Dynamics 365 Contact Center MCP Server (Preview)
+
+**Connector:** Microsoft Dataverse
+**Schema:** `MicrosoftDataverse-Dynamics365ContactCenterMCPPreview`
+**Tools:** 25
+
+This server provides tools for managing Dynamics 365 Contact Center channels, workstreams, queues, and conversations. It is currently in preview.
+
+| Tool | Description |
+|------|-------------|
+| `ListConversations` | List active conversations |
+| `GetConversation` | Get conversation details |
+| `ExecuteBulkAssignToQueue` | Bulk-assign conversations to a queue |
+| `CreateProactiveVoiceDelivery` | Create outbound voice delivery |
+| `CreateProactiveSMSDelivery` | Create outbound SMS delivery |
+| `GetCurrentOrganizationId` | Get the current org ID |
+| `GetVoiceAcsResource` | Get Azure Communication Services resource for voice |
+| `GetPhoneNumbersForVoiceAcsResource` | List phone numbers on the ACS resource |
+| `GetProvisioningStateForRelatedVoiceEntity` | Check provisioning state for voice entities |
+| `FixProvisioningStateForRelatedEntity` | Repair provisioning state for related entities |
+| `GetQueues` | List contact center queues |
+| `GetWorkstream` | Get workstream configuration |
+| `GetBotUser` | Get bot user details |
+| `CreateLiveChatChannel` | Create a live chat channel |
+| `GetOCLanguages` | Get supported omnichannel languages |
+| `CreateWorkstream` | Create a new workstream |
+| `ConnectOrOnboardVoiceACSResource` | Connect or onboard an ACS resource for voice |
+| `AddEventGridAuthenticationApplicationDetail` | Add Event Grid auth app details |
+| `ConfigureVoiceChannelSetting` | Configure voice channel settings |
+| `AddVoiceChannelLanguageSetting` | Add language settings to a voice channel |
+| `CreateAndConnectBot` | Create and connect a bot user |
+| `CheckLogsForAnActivity` | Check logs for a specific activity |
+| `GetLiveChatConfig` | Get live chat configuration |
+| `AssociateLiveChatChannelToWorkStream` | Link a live chat channel to a workstream |
+| `AssociateQueueToWorkStream` | Link a queue to a workstream |
+
+**Note:** Full parameter details for each tool are available via the `listtools` API. This server is designed for D365 Contact Center administration and channel provisioning, not day-to-day agent use.
+
+---
+
+## Dynamics 365 Conversation Orchestrator MCP Server (Preview)
+
+**Connector:** Microsoft Dataverse
+**Schema:** `MicrosoftDataverse-Dynamics365ConversationOrchestratorMCPPreview`
+**Tools:** 1
+
+| Tool | Description | Required Params | Optional Params |
+|------|-------------|-----------------|-----------------|
+| `TransferToQueue` | Transfer an active conversation to a specific queue | ApiVersion (string, always `"1.0"`), QueueId (GUID), msdyn_ocliveworkitemid (conversation ID) | *(none)* |
+
+**Note:** This is a single-purpose server for routing live conversations to queues during agent handoff scenarios. Currently in preview.
+
+---
+
+## Additional Microsoft MCP Servers (Not Yet Captured)
+
+These servers appear in the [built-in catalog](https://learn.microsoft.com/en-us/microsoft-copilot-studio/mcp-microsoft-mcp-servers) but have not been captured via the `listtools` API yet:
+
+| Server | Connector / Type | Purpose |
+|--------|-----------------|---------|
+| **Microsoft SharePoint Lists MCP** | SharePoint | SharePoint list operations (create, read, update list items) |
+| **Microsoft 365 Admin Center MCP** | Admin Center | Admin center management operations |
+| **Fabric MCP** | Microsoft Fabric | Data analytics and Fabric integration |
+| **Teams MCP** (connector-wrapped) | Microsoft Teams | Teams channel/chat operations via connector (distinct from Agent 365 Teams MCP) |
+| **SharePoint MCP** (connector-wrapped) | SharePoint | SharePoint site/library operations via connector (distinct from Agent 365 ODSP MCP) |
+
+**To capture:** Use the `listtools` API endpoint against a Copilot Studio agent that has these servers enabled. The schema name follows the pattern `{ConnectorName}-{ServerName}`.
 
 ---
 
 ## Sources
 
+**Agent 365 servers (top section):**
 - [Agent 365 Tooling Servers Overview](https://learn.microsoft.com/en-us/microsoft-agent-365/tooling-servers-overview)
 - [Built-in MCP Servers Catalog](https://learn.microsoft.com/en-us/microsoft-copilot-studio/mcp-microsoft-mcp-servers)
 - [Outlook Mail Reference](https://learn.microsoft.com/en-us/microsoft-agent-365/mcp-server-reference/mail)
@@ -312,3 +431,8 @@ These MCP servers are built on top of Power Platform connectors (e.g., Office 36
 - [User Profile Reference](https://learn.microsoft.com/en-us/microsoft-agent-365/mcp-server-reference/me)
 - [Copilot Search Reference](https://learn.microsoft.com/en-us/microsoft-agent-365/mcp-server-reference/searchtools)
 - [Dataverse Reference](https://learn.microsoft.com/en-us/microsoft-agent-365/mcp-server-reference/dataverse)
+
+**Connector-wrapped servers (bottom section):**
+- Captured via Power Platform `listtools` API from Copilot Studio, March 2026
+- API endpoint: `POST /powervirtualagents/bots/{botId}/modelcontextprotocol/listtools?api-version=2022-03-01-preview`
+- Data reflects tool schemas as returned by the API at time of capture; parameters and tool availability may change as servers move from preview to GA
