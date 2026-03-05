@@ -1,0 +1,76 @@
+{
+  "name": "Copy Inbound to Outbound",
+  "description": "Manually invoked flow that copies all files from Workflow Inbound to Workflow Outbound with a COPY_ prefix.",
+  "publisher": {
+    "uniqueName": "DefaultPublisherorg60ae70f3",
+    "displayName": "Default Publisher for org60ae70f3",
+    "description": "Default publisher for this organization",
+    "prefix": "cr449",
+    "optionValuePrefix": 10000
+  },
+  "solution": {
+    "uniqueName": "CopyInboundToOutbound",
+    "displayName": "Copy Inbound to Outbound",
+    "version": "1.1.0.0"
+  },
+  "connectors": {
+    "shared_onedriveforbusiness": { "displayName": "OneDrive for Business" }
+  },
+  "trigger": {
+    "manual": {
+      "type": "Request",
+      "kind": "Button",
+      "inputs": {
+        "schema": {
+          "type": "object",
+          "properties": {},
+          "required": []
+        }
+      }
+    }
+  },
+  "actions": {
+    "List_files_in_Workflow_Inbound": {
+      "type": "OpenApiConnection",
+      "inputs": {
+        "parameters": {
+          "id": "b!J0N2XQ1PLkyLDGiu04by3IZc_Yd7fHZEsn_Hayz3BCl6aJ_4_t_ORrM-rKeau7Om.01FVFXJ3QALHMJ2652QRGJZXM2MYDKSH3R"
+        },
+        "host": {
+          "apiId": "/providers/Microsoft.PowerApps/apis/shared_onedriveforbusiness",
+          "operationId": "ListFolderV2",
+          "connectionName": "shared_onedriveforbusiness"
+        }
+      },
+      "runAfter": {},
+      "metadata": {
+        "b!J0N2XQ1PLkyLDGiu04by3IZc_Yd7fHZEsn_Hayz3BCl6aJ_4_t_ORrM-rKeau7Om.01FVFXJ3QALHMJ2652QRGJZXM2MYDKSH3R": "/Workflow Inbound"
+      }
+    },
+    "Apply_to_each": {
+      "type": "Foreach",
+      "foreach": "@outputs('List_files_in_Workflow_Inbound')?['body/value']",
+      "actions": {
+        "Copy_file_to_Outbound": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "source": "@items('Apply_to_each')?['Path']",
+              "destination": "/Workflow Outbound/COPY_@{items('Apply_to_each')?['Name']}",
+              "overwrite": true
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_onedriveforbusiness",
+              "operationId": "CopyDriveFileByPath",
+              "connectionName": "shared_onedriveforbusiness"
+            }
+          },
+          "runAfter": {}
+        }
+      },
+      "runAfter": {
+        "List_files_in_Workflow_Inbound": ["SUCCEEDED"]
+      }
+    }
+  }
+}

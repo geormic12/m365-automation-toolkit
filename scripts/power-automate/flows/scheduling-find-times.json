@@ -1,0 +1,57 @@
+{
+  "displayName": "Scheduling Agent - Find Available Times",
+  "description": "Uses Microsoft's FindMeetingTimes API to compute available meeting windows server-side. Alternative to manual gap analysis.",
+  "creator": "Claude Code",
+  "connectors": {
+    "shared_office365": { "displayName": "Office 365 Outlook" }
+  },
+  "trigger": {
+    "manual": {
+      "type": "Request",
+      "kind": "Button",
+      "inputs": {
+        "schema": {
+          "type": "object",
+          "properties": {},
+          "required": []
+        }
+      }
+    }
+  },
+  "actions": {
+    "Find_meeting_times": {
+      "runAfter": {},
+      "type": "OpenApiConnection",
+      "inputs": {
+        "host": {
+          "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+          "connectionName": "shared_office365",
+          "operationId": "FindMeetingTimes"
+        },
+        "parameters": {
+          "body/Attendees": [],
+          "body/TimeConstraint": {
+            "ActivityDomain": "Work",
+            "TimeSlots": [
+              {
+                "Start": {
+                  "DateTime": "2026-02-13T09:00:00",
+                  "TimeZone": "Central Standard Time"
+                },
+                "End": {
+                  "DateTime": "2026-02-20T17:30:00",
+                  "TimeZone": "Central Standard Time"
+                }
+              }
+            ]
+          },
+          "body/MeetingDuration": "PT30M",
+          "body/MaxCandidates": 10,
+          "body/MinimumAttendeePercentage": 100,
+          "body/ReturnSuggestionReasons": true
+        },
+        "authentication": "@parameters('$authentication')"
+      }
+    }
+  }
+}

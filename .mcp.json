@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "ms365": {
+      "command": "npx",
+      "args": ["-y", "@softeria/ms-365-mcp-server@0.44.0", "--org-mode"]
+    }
+  }
+}

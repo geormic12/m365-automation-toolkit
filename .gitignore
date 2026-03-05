@@ -1,0 +1,22 @@
+# Generated output
+output/
+*.zip
+
+# Node
+node_modules/
+
+# Debug artifacts
+.playwright-mcp/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Claude Code local state
+.claude/projects/
+.claude/plans/
+.claude/todos/
+
+# Temp files
+*.tmp
+*.log

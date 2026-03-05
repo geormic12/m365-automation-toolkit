@@ -1,0 +1,73 @@
+{
+  "displayName": "Scheduling Agent - Calendar Query",
+  "description": "Queries Outlook calendar events for a date range and returns event list for availability analysis. Used as backend tool for the Scheduling Agent.",
+  "creator": "Claude Code",
+  "connectors": {
+    "shared_office365": { "displayName": "Office 365 Outlook" }
+  },
+  "trigger": {
+    "manual": {
+      "type": "Request",
+      "kind": "Button",
+      "inputs": {
+        "schema": {
+          "type": "object",
+          "properties": {},
+          "required": []
+        }
+      }
+    }
+  },
+  "actions": {
+    "Get_events_(V4)": {
+      "runAfter": {},
+      "type": "OpenApiConnection",
+      "inputs": {
+        "host": {
+          "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+          "connectionName": "shared_office365",
+          "operationId": "V4CalendarGetItems"
+        },
+        "parameters": {
+          "table": "AAMkADgwNjg1ZDg1LTU0NTQtNGMwNy1iOTQyLTZkMThiYmU5ZTJjZQBGAAAAAACdIpCprW34Sr7ug4BN7kxbBwB5LBWIIFC5RoUqhnalouEvAAAAAAEGAAB5LBWIIFC5RoUqhnalouEvAAACrrRhAAA=",
+          "$top": 200,
+          "$orderby": "start/dateTime asc",
+          "$select": "subject,start,end,showAs,location,isAllDay,isCancelled"
+        },
+        "authentication": "@parameters('$authentication')"
+      }
+    },
+    "Select_Event_Fields": {
+      "runAfter": {
+        "Get_events_(V4)": ["Succeeded"]
+      },
+      "type": "Select",
+      "inputs": {
+        "from": "@body('Get_events_(V4)')?['value']",
+        "columns": {
+          "subject": "@item()?['subject']",
+          "start": "@item()?['start']",
+          "end": "@item()?['end']",
+          "showAs": "@item()?['showAs']",
+          "location": "@item()?['location']?['displayName']",
+          "isAllDay": "@item()?['isAllDay']"
+        }
+      }
+    },
+    "Compose_Response": {
+      "runAfter": {
+        "Select_Event_Fields": ["Succeeded"]
+      },
+      "type": "Compose",
+      "inputs": {
+        "eventCount": "@length(body('Select_Event_Fields'))",
+        "events": "@body('Select_Event_Fields')",
+        "queryInfo": {
+          "calendar": "Default",
+          "timezone": "Central Standard Time",
+          "businessHours": "9:00 AM - 5:30 PM CT"
+        }
+      }
+    }
+  }
+}

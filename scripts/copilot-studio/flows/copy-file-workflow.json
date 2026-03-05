@@ -1,0 +1,80 @@
+{
+  "name": "Copy Inbound to Outbound",
+  "description": "When a file is created in Workflow Inbound, copy it to Workflow Outbound and send an email notification.",
+  "publisher": {
+    "uniqueName": "DefaultPublisherorg60ae70f3",
+    "displayName": "Default Publisher for org60ae70f3",
+    "description": "Default publisher for this organization",
+    "prefix": "new",
+    "optionValuePrefix": 10000
+  },
+  "solution": {
+    "uniqueName": "CopyInboundToOutbound",
+    "displayName": "Copy Inbound to Outbound",
+    "version": "1.0.0.0"
+  },
+  "connectors": {
+    "shared_onedriveforbusiness": { "displayName": "OneDrive for Business" },
+    "shared_office365": { "displayName": "Office 365 Outlook" }
+  },
+  "trigger": {
+    "When_a_file_is_created": {
+      "type": "OpenApiConnection",
+      "inputs": {
+        "parameters": {
+          "folderId": "CONFIGURE_AFTER_IMPORT",
+          "includeSubfolders": false,
+          "inferContentType": true
+        },
+        "host": {
+          "apiId": "/providers/Microsoft.PowerApps/apis/shared_onedriveforbusiness",
+          "operationId": "OnNewFileV2",
+          "connectionName": "shared_onedriveforbusiness"
+        }
+      },
+      "recurrence": {
+        "interval": 1,
+        "frequency": "Minute"
+      }
+    }
+  },
+  "actions": {
+    "Copy_file": {
+      "type": "OpenApiConnection",
+      "inputs": {
+        "parameters": {
+          "id": "@triggerOutputs()?['body/Id']",
+          "destination": "\\Workflow Outbound",
+          "overwrite": false
+        },
+        "host": {
+          "apiId": "/providers/Microsoft.PowerApps/apis/shared_onedriveforbusiness",
+          "operationId": "CopyDriveFile",
+          "connectionName": "shared_onedriveforbusiness-1"
+        }
+      },
+      "runAfter": {}
+    },
+    "Send_an_email_(V2)": {
+      "type": "OpenApiConnection",
+      "inputs": {
+        "parameters": {
+          "emailMessage/To": "recipient@example.com",
+          "emailMessage/Subject": "File copied to Workflow Outbound",
+          "emailMessage/Body": "<p class=\"editor-paragraph\">File copied: @{outputs('Copy_file')?['body/Name']}</p>",
+          "emailMessage/Importance": "Normal"
+        },
+        "host": {
+          "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+          "operationId": "SendEmailV2",
+          "connectionName": "shared_office365"
+        }
+      },
+      "runAfter": {
+        "Copy_file": [
+          "SUCCEEDED"
+        ]
+      }
+    }
+  }
+}

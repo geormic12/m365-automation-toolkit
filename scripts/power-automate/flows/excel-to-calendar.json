@@ -1,0 +1,82 @@
+{
+  "displayName": "Excel to Calendar",
+  "description": "Reads rows from FakeDataTest.xlsx and creates Outlook calendar events",
+  "creator": "Claude Code",
+  "connectors": {
+    "shared_excelonlinebusiness": {
+      "displayName": "Excel Online (Business)"
+    },
+    "shared_office365": {
+      "displayName": "Office 365 Outlook"
+    }
+  },
+  "trigger": {
+    "Manually_trigger_a_flow": {
+      "type": "Request",
+      "kind": "Button",
+      "inputs": {
+        "schema": {
+          "type": "object",
+          "properties": {},
+          "required": []
+        }
+      }
+    }
+  },
+  "actions": {
+    "List_rows_present_in_a_table": {
+      "runAfter": {},
+      "type": "OpenApiConnection",
+      "inputs": {
+        "host": {
+          "apiId": "/providers/Microsoft.PowerApps/apis/shared_excelonlinebusiness",
+          "connectionName": "shared_excelonlinebusiness",
+          "operationId": "GetItems"
+        },
+        "parameters": {
+          "source": "me",
+          "drive": "b!J0N2XQ1PLkyLDGiu04by3IZc_Yd7fHZEsn_Hayz3BCl6aJ_4_t_ORrM-rKeau7Om",
+          "file": "01FVFXJ3WGPWIBHKU6VNBLPHY5O65QGJSX",
+          "table": "{25503F63-16EB-417A-98D2-A32414300241}"
+        },
+        "authentication": "@parameters('$authentication')"
+      },
+      "metadata": {
+        "01FVFXJ3WGPWIBHKU6VNBLPHY5O65QGJSX": "/FakeDataTest.xlsx",
+        "tableId": "{25503F63-16EB-417A-98D2-A32414300241}"
+      }
+    },
+    "Apply_to_each": {
+      "foreach": "@body('List_rows_present_in_a_table')?['value']",
+      "actions": {
+        "Create_event_(V4)": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+              "connectionName": "shared_office365",
+              "operationId": "V4CalendarPostItem"
+            },
+            "parameters": {
+              "table": "AAMkADgwNjg1ZDg1LTU0NTQtNGMwNy1iOTQyLTZkMThiYmU5ZTJjZQBGAAAAAACdIpCprW34Sr7ug4BN7kxbBwB5LBWIIFC5RoUqhnalouEvAAAAAAEGAAB5LBWIIFC5RoUqhnalouEvAAACrrRhAAA=",
+              "item/subject": "@items('Apply_to_each')?['Subject']",
+              "item/start": "@items('Apply_to_each')?['StartDateTime']",
+              "item/end": "@items('Apply_to_each')?['EndDateTime']",
+              "item/timeZone": "(UTC-06:00) Central Time (US & Canada)",
+              "item/location": "@items('Apply_to_each')?['Location']",
+              "item/body": "@items('Apply_to_each')?['Body']",
+              "item/requiredAttendees": "@items('Apply_to_each')?['Attendees']"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        }
+      },
+      "runAfter": {
+        "List_rows_present_in_a_table": [
+          "Succeeded"
+        ]
+      },
+      "type": "Foreach"
+    }
+  }
+}

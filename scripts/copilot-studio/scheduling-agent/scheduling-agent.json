@@ -1,0 +1,37 @@
+{
+  "name": "Scheduling Agent",
+  "schemaName": "schedulingAgent",
+  "description": "Finds available time windows on your Outlook calendar. Accepts natural language queries about availability, duration preferences, and date ranges.",
+  "instructionsFile": "scripts/copilot-studio/scheduling-agent/agent-instructions.md",
+  "greeting": "Hello, I'm {System.Bot.Name}. How can I help?",
+  "publisher": {
+    "uniqueName": "DefaultPublisherorg60ae70f3",
+    "displayName": "Default Publisher for org60ae70f3",
+    "description": "Default publisher for this organization",
+    "prefix": "cr449",
+    "optionValuePrefix": 10000
+  },
+  "solution": {
+    "uniqueName": "SchedulingAgentSolution",
+    "displayName": "Scheduling Agent",
+    "version": "1.0.0.0"
+  },
+  "orchestration": "generative",
+  "aiSettings": {
+    "useModelKnowledge": true,
+    "isFileAnalysisEnabled": true,
+    "webBrowsing": true
+  },
+  "connectors": {
+    "shared_office365": {
+      "displayName": "Office 365 Outlook",
+      "operations": [
+        "V4CalendarGetItems",
+        "V4CalendarPostItem",
+        "V4CalendarPatchItem",
+        "GetEventsCalendarViewV3",
+        "GetOutlookCategoryNames"
+      ]
+    }
+  }
+}

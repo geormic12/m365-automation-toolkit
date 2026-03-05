@@ -1,0 +1,45 @@
+{
+  "name": "Calendar Checker",
+  "schemaName": "calendarChecker",
+  "description": "Finds available meeting times across multiple people's calendars using natural language. Resolves first names to emails automatically.",
+  "instructionsFile": "calendar-checker-instructions.md",
+  "greeting": "Hi! I'm the Calendar Checker. Tell me who needs to meet, how long, and when — I'll find times that work for everyone.",
+
+  "publisher": {
+    "uniqueName": "DefaultPublisherorg60ae70f3",
+    "displayName": "Default Publisher for org60ae70f3",
+    "description": "Default publisher for this organization",
+    "prefix": "cr449",
+    "optionValuePrefix": 10000
+  },
+
+  "solution": {
+    "uniqueName": "CalendarChecker",
+    "displayName": "Calendar Checker",
+    "version": "1.0.0.0"
+  },
+
+  "orchestration": "generative",
+
+  "aiSettings": {
+    "useModelKnowledge": true,
+    "isFileAnalysisEnabled": false,
+    "webBrowsing": false
+  },
+
+  "connectors": {
+    "shared_office365": {
+      "displayName": "Office 365 Outlook",
+      "operations": [
+        "FindMeetingTimes",
+        "GetEventsCalendarViewV3"
+      ]
+    },
+    "shared_office365users": {
+      "displayName": "Office 365 Users",
+      "operations": [
+        "SearchUserV2"
+      ]
+    }
+  }
+}
