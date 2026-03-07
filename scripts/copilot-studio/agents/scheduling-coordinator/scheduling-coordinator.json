@@ -1,0 +1,48 @@
+{
+  "name": "Scheduling Coordinator",
+  "schemaName": "schedulingCoordinator",
+  "description": "Multi-person scheduling agent. Finds mutual availability across org calendars, supports recurring meeting requests, and manages tentative holds with modify/replace capability.",
+  "instructionsFile": "instructions.md",
+  "greeting": "Hi! I'm the Scheduling Coordinator. Tell me who needs to meet, how often, how long, and when — I'll find times that work for everyone and can hold them on your calendar.",
+
+  "publisher": {
+    "uniqueName": "DefaultPublisherorg60ae70f3",
+    "displayName": "Default Publisher for org60ae70f3",
+    "description": "Default publisher for this organization",
+    "prefix": "cr449",
+    "optionValuePrefix": 10000
+  },
+
+  "solution": {
+    "uniqueName": "SchedulingCoordinator",
+    "displayName": "Scheduling Coordinator",
+    "version": "1.0.0.0"
+  },
+
+  "orchestration": "generative",
+
+  "aiSettings": {
+    "useModelKnowledge": false,
+    "isFileAnalysisEnabled": false,
+    "webBrowsing": false
+  },
+
+  "connectors": {
+    "shared_office365": {
+      "displayName": "Office 365 Outlook",
+      "operations": [
+        "FindMeetingTimes",
+        "GetEventsCalendarViewV3",
+        "V4CalendarPostItem",
+        "V4CalendarPatchItem",
+        "CalendarDeleteItemV2"
+      ]
+    },
+    "shared_office365users": {
+      "displayName": "Office 365 Users",
+      "operations": [
+        "SearchUserV2"
+      ]
+    }
+  }
+}
